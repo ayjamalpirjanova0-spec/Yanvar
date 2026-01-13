@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>Nominatsiyalar Aylanishi 🎉</title>
+<style>
+body {
+  margin:0; padding:0; background:#0f172a; color:white;
+  font-family:Arial,sans-serif; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; height:100vh; overflow:hidden;
+}
+#ticker-container {
+  width:600px; overflow:hidden; border:4px solid white; border-radius:12px; height:60px;
+  position:relative; background:#1e293b; z-index:2;
+}
+#ticker {
+  display:flex; position:absolute; white-space:nowrap; will-change:transform;
+}
+.ticker-item {
+  flex:0 0 auto; width:150px; text-align:center; line-height:60px; font-weight:bold;
+  font-size:18px; margin:0 10px; border-radius:8px; color:white; cursor:pointer;
+}
+#controls { margin-top:20px; z-index:2; }
+button { padding:10px 18px; margin:5px; border:none; border-radius:6px; cursor:pointer; font-weight:bold;}
+#result { margin-top:25px; display:none; animation:pop 0.8s ease forwards; text-align:center; z-index:2; position:relative;}
+#result img { width:260px; border-radius:16px; border:4px solid white; animation:zoom 0.8s ease forwards;}
+@keyframes pop {0%{transform:scale(0) rotate(-180deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes zoom {0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.confetti {
+  position:absolute; width:10px; height:10px; background:red; opacity:0.8;
+  pointer-events:none; border-radius:50%;
+}
+#confetti-container { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden; z-index:1;}
+</style>
+</head>
+<body>
+
+<div id="ticker-container">
+  <div id="ticker"></div>
+</div>
+
+<div id="controls">
+  <button onclick="startTicker()">Run</button>
+  <button onclick="stopTicker()">Stop</button>
+  <button onclick="openResult()">Open</button>
+</div>
+
+<div id="result">
+  <h2 id="winnerText"></h2>
+  <img id="winnerImg">
+</div>
+
+<!-- Konfetti container -->
+<div id="confetti-container"></div>
+
+<script>
+// Nominalar
+const nominations=[
+{name:"Eń uyqıshı", img:"img/uyqishi.jpg"},
+{name:"Eń ashıwshaq", img:"img/ashiwshaq.jpg"},
+{name:"Eń tırjıq", img:"img/sirli.jpg"},
+{name:"Eń shox", img:"img/shox.jpg"},
+{name:"Eń biyparwa", img:"img/biyparwa.jpg"},
+{name:"Eng qıyalparaz", img:"img/hayolparast.jpg"},
+{name:"Eń romantik", img:"img/romantik.jpg"},
+{name:"Eń sıqmar", img:"img/siqmar.jpg"},
+{name:"Eń bıjıq", img:"img/bijiq.jpg"},
+{name:"Eń erinshek", img:"img/erinshek.jpg"},
+{name:"Eń ókpeshil", img:"img/okpeshil.jpg"}
+];
+
+// Ranglar
+const colors=["#ef4444","#f97316","#facc15","#22c55e","#06b6d4","#3b82f6","#6366f1","#8b5cf6","#ec4899","#14b8a6","#84cc16","#f43f5e","#fcd34d","#10b981","#8b5cf6","#3b82f6"];
+
+const ticker=document.getElementById("ticker");
+let items=[]; 
+let pos=0;
+let speed=6; 
+let tickerInterval=null;
+let selected=null;
+
+// Nominalarni chiqarish
+function initTicker(){
+  nominations.forEach((n,i)=>{
+    const div=document.createElement("div");
+    div.className="ticker-item";
+    div.textContent=n.name;
+    div.style.background=colors[i%colors.length]; 
+    ticker.appendChild(div);
+    items.push(div);
+  });
+  nominations.forEach((n,i)=>{
+    const div=document.createElement("div");
+    div.className="ticker-item";
+    div.textContent=n.name;
+    div.style.background=colors[i%colors.length];
+    ticker.appendChild(div);
+  });
+}
+initTicker();
+
+// Aylantirish
+function startTicker(){
+  document.getElementById("result").style.display="none";
+  if(tickerInterval) clearInterval(tickerInterval);
+  tickerInterval=setInterval(()=>{
+    pos-=speed;
+    if(pos<-ticker.scrollWidth/2) pos=0;
+    ticker.style.transform=`translateX(${pos}px)`;
+  },16);
+}
+
+// Stop va markazga nom
+function stopTicker(){
+  clearInterval(tickerInterval);
+  const containerWidth=document.getElementById("ticker-container").offsetWidth;
+  const centerPos=Math.abs(pos)+containerWidth/2;
+  const index=Math.floor(centerPos/170)%nominations.length;
+  selected=nominations[index];
+  pos=-index*170 + containerWidth/2 - 85;
+  ticker.style.transform=`translateX(${pos}px)`;
+}
+
+// Ochish
+function openResult(){
+  if(!selected){ alert("Avval Stop bosing!"); return; }
+  document.getElementById("winnerText").innerText=selected.name;
+  document.getElementById("winnerImg").src=selected.img;
+  document.getElementById("result").style.display="block";
+  spawnConfetti();
+  playDrum();
+}
+
+// Konfetti bomba effekti
+function spawnConfetti(){
+  const container=document.getElementById("confetti-container");
+  const total=120;
+  for(let i=0;i<total;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*container.offsetWidth+"px";
+    c.style.top="-20px";
+    c.style.width=(5+Math.random()*8)+"px";
+    c.style.height=c.style.width;
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.opacity=Math.random();
+    c.style.transform=`rotate(${Math.random()*360}deg)`;
+    container.appendChild(c);
+
+    const duration=2+Math.random()*2; 
+    setTimeout(()=>{
+      const xMove=(Math.random()-0.5)*container.offsetWidth; 
+      const yMove=container.offsetHeight+100;
+      c.style.transition=`transform ${duration}s linear, opacity ${duration}s linear`;
+      c.style.transform=`translate(${xMove}px, ${yMove}px) rotate(${Math.random()*720}deg)`;
+      c.style.opacity=0;
+    },50);
+
+    setTimeout(()=>c.remove(),duration*1000);
+  }
+}
+
+// Baraban ovozi
+function playDrum(){
+  const audio=new Audio("audio/drum.mp3"); 
+  audio.play().catch(e=>console.log("Audio yo‘q"));
+}
+</script>
+
+</body>
+  </html>
